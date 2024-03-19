@@ -73,11 +73,14 @@ app.get('/stream/:songId', async (req, res) => {
 
 app.get('/api/songs', async (req, res) => {
     try {
-      const connection = await pool.getConnection();
-      const rows = await connection.query('SELECT id, title FROM songs'); // 곡의 id와 이름을 조회
-      connection.end();
+        const connection = await pool.getConnection();
+        // 아티스트, 재생 횟수를 포함하여 곡 정보 조회 및 재생 횟수 기준으로 정렬
+        // 여기서는 순위 계산을 직접 수행하지 않고, 클라이언트에서 처리할 수 있도록 합니다.
+        const query = `SELECT id, title, artist, play_count FROM songs ORDER BY play_count DESC`;
+        const rows = await connection.query(query);
+        connection.release();
   
-      res.json(rows); // 조회된 곡 목록을 JSON 형태로 응답
+        res.json(rows); // 조회된 곡 목록을 JSON 형태로 응답
     } catch (err) {
       console.error(err);
       res.status(500).send('Server error');
