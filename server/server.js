@@ -9,9 +9,9 @@ const cors = require('cors');
 
 // 여기에 데이터베이스 설정을 추가하세요. (예: MongoDB, PostgreSQL 등)
 const pool = mariadb.createPool({
-    host: 'localhost', 
-    user: 'root', 
-    password: 'mysql',
+    host: '211.183.3.100', 
+    user: 'user1', 
+    password: 'test123',
     database: 'test',
     connectionLimit: 5
 });
@@ -24,12 +24,12 @@ app.get('/stream/:songId', async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        const rows = await connection.query('SELECT id, title, file_path FROM songs WHERE id = ?', [songId]);
+        const rows = await connection.query('SELECT id, filePath FROM songs WHERE id = ?', [songId]);
         connection.release();
 
         if (rows.length > 0) {
             // DB에 저장된 파일명을 가져옵니다.
-            const filePath = rows[0].file_path; // 예를 들어, 'song1'
+            const filePath = rows[0].filePath; // 예를 들어, 'song1'
             const songPath = path.join(__dirname, '..', filePath.replace('/', path.sep));
             if (fs.existsSync(songPath)) {
                 const stat = fs.statSync(songPath);
@@ -74,7 +74,7 @@ app.get('/stream/:songId', async (req, res) => {
 app.get('/api/songs', async (req, res) => {
     try {
       const connection = await pool.getConnection();
-      const rows = await connection.query('SELECT id, title FROM songs'); // 곡의 id와 이름을 조회
+      const rows = await connection.query('SELECT id FROM songs'); // 곡의 id와 이름을 조회
       connection.end();
   
       res.json(rows); // 조회된 곡 목록을 JSON 형태로 응답
