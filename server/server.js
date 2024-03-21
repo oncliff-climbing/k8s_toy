@@ -9,7 +9,7 @@
 
     // 여기에 데이터베이스 설정을 추가하세요. (예: MongoDB, PostgreSQL 등)
     const pool = mariadb.createPool({
-        host: '211.183.3.100', 
+        host: '211.183.3.200', 
         user: 'user1', 
         password: 'test123',
         database: 'test',
@@ -85,6 +85,12 @@
         console.error(err);
         res.status(500).send('Server error');
         }
+    });
+
+    app.use(express.static(path.join(__dirname, 'build')));
+
+    app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
     });
 
     app.listen(PORT, () => {
