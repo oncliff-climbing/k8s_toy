@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: streaming-app
-  namespace: k8s_toy
+  namespace: k8s-toy
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: streaming-app
-        image: koreapower98/path2:test
+        image: koreapower98/jw2:test
         resources:
           limits:
             cpu: "0.5"
@@ -25,14 +25,13 @@ spec:
             memory: "128Mi"
         ports:
         - containerPort: 3001
-      nodeSelector: # 워커(worker) 노드에 배포
-        node-role.kubernetes.io/worker: ""
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: my-api-service
-  namespace: k8s_toy
+  namespace: k8s-toy
 spec:
   selector:
     app: streaming-app
@@ -40,13 +39,13 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3001
-  type: LoadBalancer # 매니저(manager) 노드에 배포
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mariadb-deployment
-  namespace: k8s_toy
+  namespace: k8s-toy
 spec:
   replicas: 1
   selector:
@@ -69,14 +68,13 @@ spec:
           value: "test"
         ports:
         - containerPort: 3306
-      nodeSelector: # 매니저(manager) 노드에 배포
-        node-role.kubernetes.io/manager: ""
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: my-db-service
-  namespace: k8s_toy
+  namespace: k8s-toy
 spec:
   selector:
     app: mariadb
@@ -89,7 +87,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: streaming-app-hpa
-  namespace: k8s_toy
+  namespace: k8s-toy
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
