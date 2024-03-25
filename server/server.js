@@ -9,8 +9,8 @@
 
     // 여기에 데이터베이스 설정을 추가하세요. (예: MongoDB, PostgreSQL 등)
     const pool = mariadb.createPool({
-        host: '211.183.3.200', 
-        user: 'user1', 
+        host: 'my-db-service', 
+        user: 'root', 
         password: 'test123',
         database: 'test',
         connectionLimit: 5
@@ -30,7 +30,13 @@
             if (rows.length > 0) {
                 // DB에 저장된 파일명을 가져옵니다.
                 const filePath = rows[0].file_path; // 예를 들어, 'song1'
-                const songPath = path.join(__dirname, '..', filePath.replace('/', path.sep));
+                // file_path 로깅
+            	console.log(`Database filePath: ${filePath}`);
+		
+		const songPath = path.join(__dirname, filePath.startsWith('/') ? filePath.substring(1) : filePath);
+
+		// 계산된 실제 파일 경로 로깅
+            	console.log(`Resolved songPath: ${songPath}`);
                 if (fs.existsSync(songPath)) {
                     const stat = fs.statSync(songPath);
                     const fileSize = stat.size;
@@ -60,6 +66,7 @@
                         fs.createReadStream(songPath).pipe(res);
                     }
                 } else {
+		    console.error(`File does not exist at path: ${songPath}`);
                     res.status(404).send('File not found');
                 }
             } else {
@@ -87,10 +94,10 @@
         }
     });
 
-    app.use(express.static(path.join(__dirname, 'build')));
+    app.use(express.static(path.join(__dirname, 'client/build')));
 
-    app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    app.get('/', function (req, res) {
+        res.sendFile(path.join(__dirname, '/client/build/index.html'));
     });
 
     app.listen(PORT, () => {
