@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streaming-app
+  template:
+    metadata:
+      labels:
+        app: streaming-app
+    spec:
+      containers:
+      - name: streaming-app
+        image: koreapower98/dynamic:ip
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "256Mi"
+          requests:
+            cpu: "0.25"
+            memory: "128Mi"
+        ports:
+        - containerPort: 3001
+      nodeSelector: # 워커(worker) 노드에 배포
+        node-role.kubernetes.io/worker: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-api-service
+spec:
+  selector:
+    app: streaming-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3001
+  type: LoadBalancer # 매니저(manager) 노드에 배포
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: dongjunlee24/music_db:stable
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "test123"
+        - name: MYSQL_ROOT_HOST
+          value: "%"
+        - name: MYSQL_DATABASE
+          value: "test"
+        ports:
+        - containerPort: 3306
+      nodeSelector: # 매니저(manager) 노드에 배포
+        node-role.kubernetes.io/manager: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-db-service
+spec:
+  selector:
+    app: mariadb
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: streaming-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: streaming-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
