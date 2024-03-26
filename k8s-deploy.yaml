@@ -40,6 +40,8 @@ spec:
       port: 80
       targetPort: 3001
   type: LoadBalancer
+  loadBalancerIP: 192.168.50.54
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -58,7 +60,7 @@ spec:
     spec:
       containers:
       - name: mariadb
-        image: dongjunlee24/music_db:stable
+        image: oncliff/k8s-toy:db
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: "test123"
