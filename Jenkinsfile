@@ -13,9 +13,18 @@ pipeline {
         stage ('docker app build and push') {
           steps {
             sh '''
-            cd /var/lib/jenkins/streaming
+            cd /var/lib/jenkins/k8s_toy
             docker build -t oncliff/k8s-toy:app1 .
             docker push oncliff/k8s-toy:app1 
+            '''
+          }
+        }
+        stage ('docker DB build and push') {
+          steps {
+            sh '''
+            cd /var/lib/jenkins/k8s_toy/web_db
+            docker build -t oncliff/k8s-toy:db .
+            docker push oncliff/k8s-toy:db 
             '''
           }
         }
@@ -56,5 +65,4 @@ pipeline {
         echo "deploy failure"
         // 배포가 실패하면 실행할 액션
         }
-    }
-}      
+    }     
