@@ -65,5 +65,4 @@ pipeline {
         echo "deploy failure"
         // 배포가 실패하면 실행할 액션
         }
-    }
-}      
+    }     
