@@ -53,7 +53,7 @@ const MusicPlayer = () => {
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await axios.get('http://192.168.50.52/api/songs');
+        const response = await axios.get('http://192.168.50.54/api/songs');
         console.log(response.data); // 서버 응답 확인용
         setSongs(response.data);
       } catch (error) {
@@ -69,7 +69,7 @@ const MusicPlayer = () => {
         currentAudio.pause(); // 현재 재생 중인 오디오가 있으면 정지
         setProgress(prev => ({...prev, [currentSongId]: 0})); // 진행률 초기화
     }
-    const audio = new Audio(`http://192.168.50.52/stream/${songId}`);
+    const audio = new Audio(`http://192.168.50.54/stream/${songId}`);
     setCurrentSongId(songId); // 현재 재생 중인 곡의 ID 업데이트
     audio.play()
         .then(() => {
