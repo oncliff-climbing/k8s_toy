@@ -58,7 +58,7 @@ spec:
     spec:
       containers:
       - name: mariadb
-        image: oncliff/k8s_toy:db
+        image: oncliff/k8s-toy:db
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: "test123"
