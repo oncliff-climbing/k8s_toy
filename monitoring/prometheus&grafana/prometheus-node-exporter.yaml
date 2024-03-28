@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    k8s-app: node-exporter
+spec:
+  selector:
+    matchLabels:
+      k8s-app: node-exporter
+  template:
+    metadata:
+      labels:
+        k8s-app: node-exporter
+      annotations:
+        prometheus.io/scrape: "true"  # Prometheus가 스크레이핑 할 것임을 명시
+        prometheus.io/port: "9100"  # Prometheus가 스크레이핑 할 때 사용할 포트
+    spec:
+      tolerations:
+      # manager 노드에 taint가 적용된 경우 해당 taint를 용인
+      - key: "node-role.kubernetes.io/master"  # manager 노드에 일반적으로 사용되는 taint key
+        effect: "NoSchedule"  # NoSchedule 효과를 가진 taint를 용인
+        operator: "Exists"  # 키가 존재한다면 용인
+      containers:
+      - image: prom/node-exporter
+        name: node-exporter
+        ports:
+        - containerPort: 9100  # node-exporter가 메트릭을 제공하는 포트
+          protocol: TCP
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: node-exporter
+  name: node-exporter
+  namespace: monitoring
+spec:
+  ports:
+  - name: http  # 서비스 포트 이름
+    port: 9100  # 서비스 포트
+    protocol: TCP
+  type: ClusterIP  # 이 서비스의 타입은 ClusterIP
+  selector:
+    k8s-app: node-exporter  # 이 서비스가 관리하는 파드의 라벨 선택자
