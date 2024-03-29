@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 1
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import { FaPlay, FaPause } from 'react-icons/fa';
