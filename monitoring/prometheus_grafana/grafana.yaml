@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: grafana
-        image: doitcomet/grafana:v6.0
+        image: monitoring_1.0.90 #doitcomet/grafana:v6.0
         ports:
         - name: grafana
           containerPort: 3000

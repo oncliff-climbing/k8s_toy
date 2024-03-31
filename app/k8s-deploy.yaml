@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: streaming-app
-        image: oncliff/k8s-toy:app
+        image: oncliff/k8s-toy:app_1.0.90
         resources:
           limits:
             cpu: "1"
