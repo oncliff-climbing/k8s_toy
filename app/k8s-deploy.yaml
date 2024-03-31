@@ -14,18 +14,16 @@ spec:
     spec:
       containers:
       - name: streaming-app
-        image: koreapower98/wed2:test
+        image: koreapower98/buf3:test
         resources:
           limits:
             cpu: "1"
             memory: "512Mi"
-          request:
+          requests:
             cpu: "0.2"
             memory: "256Mi"
         ports:
           - containerPort: 3001
-        nodeSelector:
-          node-role.kubernetes.io/worker: ""
         env:
           - name: DATABASE_HOST
             valueFrom:
@@ -47,6 +45,21 @@ spec:
               secretKeyRef:
                 name: rds-secret
                 key: database
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: s3-secret
+                key: access
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: s3-secret
+                key: secret
+          - name: AWS_REGION
+            valueFrom:
+              secretKeyRef:
+                name: s3-secret
+                key: region
         volumeMounts:
         - name: s3-bucket
           mountPath: /mnt/s3bucket
