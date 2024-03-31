@@ -231,7 +231,6 @@
 
     const playSong = async (songId) => {
       try {
-<<<<<<< HEAD
         // 서명된 URL을 가져오기 위한 서버 요청
         const { data } = await axios.get(`/stream/${songId}`);
         const signedUrl = data.url;
@@ -242,11 +241,6 @@
         await audio.play(); // 재생 시작
         // 재생이 성공적으로 시작되면 재생 횟수 업데이트
         await updatePlayCount(songId);
-=======
-        const response = await axios.get('http://192.168.50.52/api/songs');
-        console.log(response.data); // 서버 응답 확인용
-        setSongs(response.data);
->>>>>>> 526277095c3932a25590303400f5f5a598c5acd9
       } catch (error) {
         console.error("Error playing song:", error);
       }
@@ -265,32 +259,8 @@
         await playSong(songId);
       }
     };
-
-<<<<<<< HEAD
     const [isMuted, setIsMuted] = useState(false); // 음소거 상태
     const [prevVolume, setPrevVolume] = useState(0.5); // 이전 음량 값을 저장하는 상태
-=======
-  const playSong = (songId) => {
-    if (currentAudio) {
-        currentAudio.pause(); // 현재 재생 중인 오디오가 있으면 정지
-        setProgress(prev => ({...prev, [currentSongId]: 0})); // 진행률 초기화
-    }
-    const audio = new Audio(`http://192.168.50.52/stream/${songId}`);
-    setCurrentSongId(songId); // 현재 재생 중인 곡의 ID 업데이트
-    audio.play()
-        .then(() => {
-            console.log(`Playing song with ID: ${songId}`);
-            setCurrentAudio(audio); // 현재 재생 중인 오디오로 설정
-
-            audio.ontimeupdate = () => {
-                const currentProgress = (audio.currentTime / audio.duration) * 100;
-                setProgress(prev => ({...prev, [songId]: currentProgress}));
-            };
-        })
-        .catch(err => console.error('Error playing song:', err));
-  };
->>>>>>> 526277095c3932a25590303400f5f5a598c5acd9
-
     const toggleMute = () => {
       const audio = audioRef.current;
       if (!audio.muted) {
