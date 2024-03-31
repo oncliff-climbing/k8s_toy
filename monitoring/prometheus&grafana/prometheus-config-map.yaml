@@ -11,18 +11,18 @@ data:
     - name: container memory alert
       rules:
       - alert: container memory usage rate is very high( > 55%)
-        expr: sum(container_memory_working_set_bytes{pod!="", name=""})/ sum (kube_node_status_allocatable_memory_bytes) * 100 > 55
+        expr: sum(container_memory_working_set_bytes{pod!="", name=""})/ sum(kube_node_status_allocatable_memory_bytes) * 100 > 55
         for: 1m
         labels:
           severity: fatal
         annotations:
-          summary: High Memory Usage on 
+          summary: High Memory Usage on
           identifier: ""
           description: " Memory Usage: "
     - name: container CPU alert
       rules:
       - alert: container CPU usage rate is very high( > 10%)
-        expr: sum (rate (container_cpu_usage_seconds_total{pod!=""}[1m])) / sum (machine_cpu_cores) * 100 > 10
+        expr: sum(rate(container_cpu_usage_seconds_total{pod!=""}[1m])) / sum(machine_cpu_cores) * 100 > 10
         for: 1m
         labels:
           severity: fatal
@@ -40,34 +40,25 @@ data:
         static_configs:
         - targets:
           - "alertmanager.monitoring.svc:9093"
-
     scrape_configs:
       - job_name: 'kubernetes-apiservers'
-
         kubernetes_sd_configs:
         - role: endpoints
         scheme: https
-
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
         relabel_configs:
         - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
           action: keep
           regex: default;kubernetes;https
-
       - job_name: 'kubernetes-nodes'
-
         scheme: https
-
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
         kubernetes_sd_configs:
         - role: node
-
         relabel_configs:
         - action: labelmap
           regex: __meta_kubernetes_node_label_(.+)
@@ -77,42 +68,40 @@ data:
           regex: (.+)
           target_label: __metrics_path__
           replacement: /api/v1/nodes/${1}/proxy/metrics
-
-
-          #      - job_name: 'kubernetes-pods'
-
-          #          kubernetes_sd_configs:
-          #        - role: pod
-
-          #        relabel_configs:
-          #        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-          #          action: keep
-          #          regex: true
-          #        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-          #          action: replace
-          #          target_label: __metrics_path__
-          #          regex: (.+)
-          #        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-          #          action: replace
-          #          regex: ([^:]+)(?::\d+)?;(\d+)
-          #          replacement: $1:$2
-          #          target_label: __address__
-          #        - action: labelmap
-          #          regex: __meta_kubernetes_pod_label_(.+)
-          #        - source_labels: [__meta_kubernetes_namespace]
-          #          action: replace
-          #          target_label: kubernetes_namespace
-          #        - source_labels: [__meta_kubernetes_pod_name]
-          #          action: replace
-          #          target_label: kubernetes_pod_name
-
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+        - role: pod
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          target_label: __address__
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - source_labels: [__meta_kubernetes_namespace]
+          action: replace
+          target_label: kubernetes_namespace
+        - source_labels: [__meta_kubernetes_pod_name]
+          action: replace
+          target_label: kubernetes_pod_name
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          target_label: node
+          
       - job_name: 'kube-state-metrics'
         kubernetes_sd_configs:
         - role: endpoints
           namespaces:
             names:
             - kube-system
-
         relabel_configs:
         - source_labels: [__meta_kubernetes_service_name]
           action: keep
@@ -120,18 +109,13 @@ data:
         - source_labels: [__meta_kubernetes_endpoint_port_name]
           action: keep
           regex: http-metrics
-
       - job_name: 'kubernetes-cadvisor'
-
         scheme: https
-
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
         kubernetes_sd_configs:
         - role: node
-
         relabel_configs:
         - action: labelmap
           regex: __meta_kubernetes_node_label_(.+)
@@ -141,12 +125,9 @@ data:
           regex: (.+)
           target_label: __metrics_path__
           replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
-
       - job_name: 'kubernetes-service-endpoints'
-
         kubernetes_sd_configs:
         - role: endpoints
-
         relabel_configs:
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
           action: keep
@@ -172,21 +153,20 @@ data:
         - source_labels: [__meta_kubernetes_service_name]
           action: replace
           target_label: kubernetes_name
-
-      - job_name: 'node-exporter'
-        kubernetes_sd_configs:
-        - role: pod
-          namespaces:
-            names:
-            - monitoring
-        relabel_configs:
-        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-          action: keep
-          regex: true
-        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-          action: replace
-          target_label: __address__
-          regex: ([^:]+)(?::\d+)?;(\d+)
-          replacement: $1:$2
-        - action: labelmap
-          regex: __meta_kubernetes_pod_label_(.+)
+          #      - job_name: 'node-exporter'
+          #        kubernetes_sd_configs:
+          #        - role: pod
+          #          namespaces:
+          #            names:
+          #            - monitoring
+          #        relabel_configs:
+          #        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          #          #          action: keep
+          #          regex: true
+          #        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          #          action: replace
+          #          target_label: __address__
+          #          regex: ([^:]+)(?::\d+)?;(\d+)
+          #          replacement: $1:$2
+          #        - action: labelmap
+          #          regex: __meta_kubernetes_pod_label_(.+)
