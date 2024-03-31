@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: streaming-app
-  namespace: k8s-toy
 spec:
   replicas: 1
   selector:
@@ -15,23 +14,52 @@ spec:
     spec:
       containers:
       - name: streaming-app
-        image: oncliff/k8s-toy:app1
+        image: koreapower98/wed2:test
         resources:
           limits:
-            cpu: "0.5"
+            cpu: "1"
+            memory: "512Mi"
+          request:
+            cpu: "0.2"
             memory: "256Mi"
-          requests:
-            cpu: "0.25"
-            memory: "128Mi"
         ports:
-        - containerPort: 3001
-
+          - containerPort: 3001
+        nodeSelector:
+          node-role.kubernetes.io/worker: ""
+        env:
+          - name: DATABASE_HOST
+            valueFrom:
+              secretKeyRef:
+                name: rds-secret
+                key: host
+          - name: DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: rds-secret
+                key: username
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: rds-secret
+                key: password
+          - name: DATABASE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: rds-secret
+                key: database
+        volumeMounts:
+        - name: s3-bucket
+          mountPath: /mnt/s3bucket
+      volumes:
+      - name: s3-bucket
+        hostPath:
+          path: /mnt/s3bucket
+          type: Directory
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: my-api-service
-  namespace: k8s-toy
 spec:
   selector:
     app: streaming-app
@@ -39,57 +67,12 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3001
-  type: LoadBalancer
-  loadBalancerIP: 192.168.50.52
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mariadb-deployment
-  namespace: k8s-toy
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mariadb
-  template:
-    metadata:
-      labels:
-        app: mariadb
-    spec:
-      containers:
-      - name: mariadb
-        image: oncliff/k8s-toy:db
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "test123"
-        - name: MYSQL_ROOT_HOST
-          value: "%"
-        - name: MYSQL_DATABASE
-          value: "test"
-        ports:
-        - containerPort: 3306
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-db-service
-  namespace: k8s-toy
-spec:
-  selector:
-    app: mariadb
-  ports:
-  - protocol: TCP
-    port: 3306
-    targetPort: 3306
+  type: LoadBalancer # 매니저(manager) 노드에 배포
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: streaming-app-hpa
-  namespace: k8s-toy
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
