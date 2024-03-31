@@ -61,14 +61,6 @@ spec:
               secretKeyRef:
                 name: s3-secret
                 key: region
-        volumeMounts:
-        - name: s3-bucket
-          mountPath: /mnt/s3bucket
-      volumes:
-      - name: s3-bucket
-        hostPath:
-          path: /mnt/s3bucket
-          type: Directory
 ---
 apiVersion: v1
 kind: Service
