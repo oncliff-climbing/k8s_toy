@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: streaming-app
-        image: koreapower98/buf3:test
+        image: oncliff/k8s-toy:app
         resources:
           limits:
             cpu: "1"
