@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: streaming-app
-        image: oncliff/k8s-toy:app_1.0.90
+        image: oncliff/k8s-toy:app_1.0.96
         resources:
           limits:
             cpu: "1.5"
@@ -76,7 +76,7 @@ spec:
       targetPort: 3001
   type: LoadBalancer # 매니저(manager) 노드에 배포
 ---
-/* apiVersion: autoscaling/v2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: streaming-app-hpa
@@ -106,4 +106,4 @@ spec:
           periodSeconds: 60
       selectPolicy: Max
       stabilizationWindowSeconds: 300
-        */
+        
