@@ -1,0 +1,77 @@
+pipeline {
+    agent any
+    environment {
+        SERVER_IP = '192.168.50.55'
+        SONAR_URL = 'http://192.168.50.55:9000'
+        DOCKER_IMAGE = 'oncliff/k8s-toy'
+        DOCKER_TAG = '1.0'
+        buildPipeline = false //소나 큐브 분석 실패 시 테스트를 진행하지 않는다.
+
+    }
+       stages {
+        stage('Checkout') {
+            steps {
+                // Git 저장소에서 코드를 가져옵니다. 브랜치, 인증 정보, 서브 모듈 설정 포함
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/master']], // 'master' 브랜치를 대상으로 합니다.
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/kakaojungwoo/k8s_toy.git',
+                        credentialsId: 'git' // Jenkis에 등록한 Gib Token 정보
+                    ]]
+                ])
+            }
+        }
+        stage('SonarQube analysis') {
+            steps{
+                withSonarQubeEnv('CI-k8s-toy'){
+                    sh "sonar-scanner \
+                        -Dsonar.projectKey=CI-k8s-toy \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://192.168.50.55:9000 \
+                        -Dsonar.token=sqp_e0441de4a7f59f0382969a3ee1d3a3004b63ffdc"
+                }
+            }
+        }
+        stage("Slack Notification") {
+            steps {
+            echo 'slack test'
+            }
+            post {
+                success {
+                slackSend channel: '#cicd', color: 'good', 
+                message: """*SonarQube analysis success!* \n *Jenkins:*${env.SERVER_IP}:8080 \n *SonarQube:*${env.SONAR_URL}"""
+                    script {
+                        buildPipeline = true
+                    }
+                }
+                failure {
+                slackSend channel: '#cicd', color: 'danger', 
+                message: "*SonarQube analysis failure!* \n ${env.SERVER_IP}:9000"
+                    script {
+                        buildPipeline = false
+                    }
+                }
+            }
+        }
+        stage ('docker image build and push') {
+            when {
+                expression {return buildPipeline} //SonarQube 분석이 성공할 때만 빌드 시작
+            }
+            steps {
+                script {
+                    def newTag = "${env.DOCKER_TAG}.${env.BUILD_NUMBER}" //BUILD_NUMBER는 젠킨스에서 제공하는 환경변수로 동적으로 태그 번호를 업그레이드 할 수 있다.
+                    def images = ["app", "monitoring"]
+                    images.each {img -> 
+                        dir("/var/lib/jenkins/k8s_toy/${img}") {
+                            sh "docker build -t ${env.DOCKER_IMAGE}:${img}_${newTag} ."
+                            sh "docker push ${env.DOCKER_IMAGE}:${img}_${newTag}"  
+                        }
+                    }              
+            }
+          }
+        }
+
+        }
+    }
+        
