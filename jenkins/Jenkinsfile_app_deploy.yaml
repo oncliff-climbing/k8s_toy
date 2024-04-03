@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+    environment {
+      // 환경 변수 설정
+      SERVER_IP = '192.168.50.55'
+      APP_URL = 'http://192.168.50.52'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                // Git 저장소에서 코드를 가져옵니다. 브랜치, 인증 정보, 서브 모듈 설정 포함
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/master']], // 'master' 브랜치를 대상으로 합니다.
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/kakaojungwoo/k8s_toy.git',
+                        credentialsId: 'git' // Jenkis에 등록한 Gib Token 정보
+                    ]]
+                ])
+            }
+        }
+        stage('app deploy kubernetes') {
+          steps {
+            script {
+            sh '''
+            ansible manager -m shell -b -a "cd /root/k8s_toy/app"
+            ansible manager -m command -b -a "kubectl apply -f /root/k8s_toy/app/k8s-deploy.yaml"
+            '''
+            }
+          }  
+        } 
+        stage('monitoring deploy kubernetes') {
+          steps {
+            script {
+            sh '''
+            ansible manager -m shell -b -a "cd /root/k8s_toy/monitoring/prometheus_grafana"
+            ansible manager -m command -b -a "kubectl apply -f /root/k8s_toy/monitoring/prometheus_grafana/grafana.yaml"
+            ansible manager -m shell -b -a " chmod +x /root/k8s_toy/monitoring/prometheus_grafana/prometheus_install.sh"
+            ansible manager -m shell -b -a " /root/k8s_toy/monitoring/prometheus_grafana/prometheus_install.sh"
+            '''
+            }
+          }  
+        } 
+        stage('deploy sucess') {
+          steps {
+            sh '''
+            ansible manager -m command -b -a "kubectl get all -n k8s-toy -o wide"
+            ansible manager -m command -b -a "kubectl get all -n monitoring -o wide"
+            '''
+            }
+          }   
+        stage("Slack Notification") {
+          steps {
+            echo 'slack send notification'
+          }
+            post {
+              success {
+                slackSend channel: '#cicd', color: 'good', 
+                message: """*Application deploy success!* \n Jenkins: ${env.SERVER_IP}:8080 \n *APP_URL:* ${env.APP_URL}"""
+              }
+              failure {
+                slackSend channel: '#cicd', color: 'danger', 
+                message: "*Application deploy failure!* \n *Jenkins:* ${env.SERVER_IP}:8080"
+              }
+            } 
+          }
+    }
+}      
